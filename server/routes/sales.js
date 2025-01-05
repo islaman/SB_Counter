@@ -15,17 +15,13 @@ router.get('/api/sales', async (req, res) => {
 });
 router.post('/api/sales', async (req, res) => {
   const { company, sku, amount } = req.body;
-
-
-
   try {
-    // Lógica para guardar la venta
     const sale = new Sale({
       company,
       sku,
       amount,
-      type: req.body.type || 'units', // Valor por defecto para type
-      timestamp: req.body.timestamp || new Date().toISOString() // Valor por defecto para timestamp
+      type: req.body.type || 'units',
+      timestamp: req.body.timestamp || new Date().toISOString(),
     });
 
     const savedSale = await sale.save();

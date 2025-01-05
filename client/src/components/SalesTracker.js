@@ -124,13 +124,9 @@ const SalesTracker = () => {
 
   const handleSale = async (company, sku, increment) => {
     try {
-      const sale = {
-        company,
-        sku,
-        amount: increment,
-      };
+      const sale = { company, sku, amount: increment, type: 'units', timestamp: new Date().toISOString() };
   
-      console.log('Datos enviados al backend:', sale); // Para debugging
+      console.log('Datos enviados al backend:', sale);
   
       const response = await fetch(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
@@ -143,12 +139,24 @@ const SalesTracker = () => {
         throw new Error(errorData.error || 'Error al guardar la venta');
       }
   
-      await fetchSales();
+      const savedSale = await response.json(); // Recibe la venta guardada
+  
+      // Actualiza el estado con la nueva venta
+      setSalesRecords(prev => ({
+        ...prev,
+        [company]: [...(prev[company] || []), savedSale],
+      }));
+  
+      setSales(prev => ({
+        ...prev,
+        [sku]: Math.max(0, (prev[sku] || 0) + increment),
+      }));
     } catch (err) {
-      setError(err.message);
+      setError('Error al guardar venta: ' + err.message);
       console.error('Error saving sale:', err);
     }
   };
+  
   
 
 
@@ -205,23 +213,19 @@ const fetchWithRetry = async (url, options, maxRetries = 3) => {
 const fetchSales = async () => {
   try {
     setLoading(true);
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/sales`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
+    const response = await fetch(`${API_BASE_URL}/api/sales`);
+    if (!response.ok) throw new Error('Error al cargar las ventas');
     const data = await response.json();
-    
-    // Procesar los datos de ventas
+
     const processedSales = {};
     const processedAmounts = {};
-    
+
     data.forEach(sale => {
       if (!processedSales[sale.company]) {
         processedSales[sale.company] = [];
       }
       processedSales[sale.company].push(sale);
-      
+
       if (companies[sale.company]?.type === 'amount') {
         processedAmounts[sale.company] = (processedAmounts[sale.company] || 0) + sale.amount;
       }
@@ -229,7 +233,6 @@ const fetchSales = async () => {
 
     setSalesRecords(processedSales);
     setSalesAmount(processedAmounts);
-    setError(null);
   } catch (err) {
     setError('Error al cargar datos: ' + (err.message || 'Error de conexión'));
     console.error('Error al obtener ventas:', err);
@@ -237,6 +240,7 @@ const fetchSales = async () => {
     setLoading(false);
   }
 };
+
 
  
   
