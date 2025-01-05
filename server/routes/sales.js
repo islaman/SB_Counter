@@ -31,18 +31,6 @@ router.post('/api/sales', async (req, res) => {
   }
 });
 
-router.delete('/api/sales/:id', async (req, res) => {  // Añadido /api/ al inicio
-  try {
-    const result = await Sale.findByIdAndDelete(req.params.id);
-    if (!result) {
-      return res.status(404).json({ error: 'Sale not found' });
-    }
-    res.status(200).json({ message: 'Sale deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error deleting sale' });
-  }
-});
-
 
 // Modifica la ruta de reset
 router.delete('/api/sales/reset', async (req, res) => {
@@ -70,6 +58,20 @@ router.delete('/api/sales/reset', async (req, res) => {
     });
   }
 });
+
+router.delete('/api/sales/:id', async (req, res) => {  // Añadido /api/ al inicio
+  try {
+    const result = await Sale.findByIdAndDelete(req.params.id);
+    if (!result) {
+      return res.status(404).json({ error: 'Sale not found' });
+    }
+    res.status(200).json({ message: 'Sale deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting sale' });
+  }
+});
+
+
 
 
 // En tu backend, añade esta nueva ruta
