@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const salesRouter = require('./server/routes/sales'); // Importa las rutas
+const salesRouter = require('./sb_counter/routes/sales'); // Importa las rutas
 
 const app = express();
 app.use(express.json());
