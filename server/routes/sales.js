@@ -46,10 +46,10 @@ router.delete('/api/sales/:id', async (req, res) => {  // Añadido /api/ al inic
 // Y la ruta de reset también necesita el prefijo /api/
 router.post('/api/sales/reset', async (req, res) => {  // Añadido /api/ al inicio
   try {
-    await Sale.deleteMany({}); 
-    res.status(200).json({ message: 'All sales reset successfully' });
+    await Sale.deleteMany(); // Borra todas las ventas
+    res.status(200).json({ message: 'Todas las ventas han sido eliminadas' });
   } catch (error) {
-    res.status(500).json({ error: 'Error resetting sales' });
+    res.status(500).json({ error: 'Error al resetear las ventas' });
   }
 });
 

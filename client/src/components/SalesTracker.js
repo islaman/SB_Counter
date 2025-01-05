@@ -13,6 +13,7 @@ const SalesTracker = () => {
   const [salesRecords, setSalesRecords] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('enero');
 
   
   const companies = {
@@ -354,30 +355,28 @@ const handleResetCompany = async (company) => {
 
   const resetSales = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sales`, {  // Cambiado de /reset a /sales
-        method: 'DELETE',  // Cambiado de POST a DELETE
-        headers: { 'Content-Type': 'application/json' }
+      const response = await fetch(`${API_BASE_URL}/api/sales/reset`, {
+        method: 'DELETE'
       });
   
       if (!response.ok) {
-        throw new Error('Failed to reset sales');
+        throw new Error('Error al vaciar la base de datos');
       }
   
-      // Reset all states
+      // Limpiar estados locales
       setSales({});
       setSalesAmount({});
       setSalesRecords({});
+      setNewAmount('');
       setShowResetConfirm(false);
-      setNewAmount(''); // Limpiar también el campo de monto
-      
-      // Actualiza la vista
+  
+      // Recargar los datos
       await fetchSales();
     } catch (err) {
-      setError('Error resetting sales: ' + err.message);
-      console.error('Error resetting sales:', err);
+      setError('Error al resetear: ' + err.message);
+      console.error('Error resetting:', err);
     }
   };
- 
 
 
   const getProgressColor = (percentage) => {
