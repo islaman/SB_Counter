@@ -128,21 +128,21 @@ const SalesTracker = () => {
   };
 
 
+  
   const fetchSales = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/sales`);
       if (!response.ok) {
         throw new Error('Error al obtener las ventas');
       }
-  
       const data = await response.json();
-      console.log('Ventas obtenidas:', data);
-      // Aquí puedes actualizar el estado de `salesRecords` con los datos obtenidos
+      setSalesRecords(data);
     } catch (error) {
       console.error('Error al obtener las ventas:', error);
     }
   };
   
+
   // Llama a esta función dentro de un useEffect para ejecutarla al cargar el componente
   React.useEffect(() => {
     fetchSales();
@@ -155,10 +155,9 @@ const SalesTracker = () => {
     }, 0);
   
     const percentage = (total / data.meta) * 100;
-  
     return { total, percentage };
   };
-
+  
   
   const handleAddAmount = async (company, sku, amount, type) => {
     try {
@@ -210,12 +209,7 @@ const SalesTracker = () => {
     setShowResetConfirm(false);
   };
 
-<div>
-  Total: {data.type === 'amount' ? 
-    `$${progress.total.toLocaleString()}` : 
-    `${progress.total} unidades`}
-</div>
-
+ 
 
 
   const getProgressColor = (percentage) => {
@@ -266,41 +260,26 @@ const SalesTracker = () => {
 
           return (
             <Card key={company} className={`border-2 ${progressClass}`}>
-              <CardHeader className="border-b bg-gray-50">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-xl font-bold">{company}</CardTitle>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">
-                      Meta SKU 182: {data.type === 'amount' ? 
-                        `$${data.meta.toLocaleString()}` : 
-                        `${data.meta} unidades`}
-                    </div>
-                    <div className="text-lg font-bold">
-                      Total: {data.type === 'amount' ? 
-                        `$${progress.total.toLocaleString()}` : 
-                        progress.total}
-                      <span className="text-sm ml-2">
-                        ({progress.percentage.toFixed(1)}%)
-                      </span>
-                    </div>
-                    {data.premio > 0 && (
-                      <div className="text-sm text-green-600">
-                        Premio base: ${data.premio.toLocaleString()}
-                      </div>
-                    )}
-                    {data.sobrecumplimiento && progress.percentage >= 100 && (
-                      <div className="mt-2 text-sm">
-                        {data.sobrecumplimiento.map((nivel, index) => (
-                          <div key={index} className="flex items-center gap-1 text-violet-600">
-                            <Trophy className="w-4 h-4" />
-                            {nivel.descripcion}: ${nivel.premio.toLocaleString()}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+            <CardHeader className="border-b bg-gray-50">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-xl font-bold">{company}</CardTitle>
+                <div className="text-right">
+                  <div className="text-sm font-medium">
+                    Meta SKU 182: {data.type === 'amount' ? 
+                      `$${data.meta.toLocaleString()}` : 
+                      `${data.meta} unidades`}
+                  </div>
+                  <div className="text-lg font-bold">
+                    Total: {data.type === 'amount' ? 
+                      `$${progress.total.toLocaleString()}` : 
+                      `${progress.total} unidades`}
+                    <span className="text-sm ml-2">
+                      ({progress.percentage.toFixed(1)}%)
+                    </span>
                   </div>
                 </div>
-              </CardHeader>
+              </div>
+            </CardHeader>
               <CardContent>
                 <div className="py-3">
                   {data.type === 'amount' ? (
