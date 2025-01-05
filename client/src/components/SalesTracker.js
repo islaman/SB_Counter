@@ -195,20 +195,8 @@ const SalesTracker = () => {
   };
   
   
-
-  // Llama a esta función dentro de un useEffect para ejecutarla al cargar el componente
   React.useEffect(() => {
     fetchSales();
-    fetch('https://sb-counter-backend.onrender.com/api/sales')
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => console.log('Datos recibidos:', data))
-  .catch(error => console.error('Error al conectar con el backend:', error));
-
   }, []);
   
   const calculateCompanyProgress = (company, data) => {
@@ -254,18 +242,16 @@ const SalesTracker = () => {
   };
   
   
-
-  const handleRemoveRecord = async (company, saleId) => {
+  const handleRemoveRecord = async (company, record) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sales/${saleId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/sales/${record._id}`, {
         method: 'DELETE'
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to delete sale record');
       }
-
-      // Refresh sales data
+  
       await fetchSales();
     } catch (err) {
       setError('Error deleting record: ' + err.message);
@@ -396,7 +382,7 @@ const SalesTracker = () => {
                           />
                         </div>
                         <button
-                          onClick={handleAddAmount}
+                          onClick={() => handleAddAmount(company, 'MIX-' + company, Number(newAmount))}
                           disabled={!newAmount}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                         >
@@ -409,22 +395,22 @@ const SalesTracker = () => {
                           <h3 className="font-medium">Registro de Ventas</h3>
                         </div>
                         <div className="divide-y max-h-60 overflow-auto">
-                          {salesRecords[company]?.map((record, index) => (
-                            <div key={index} className="flex justify-between items-center px-4 py-2">
-                              <span className="text-sm text-gray-600">
-                                {new Date(record.timestamp).toLocaleString()}
-                              </span>
-                              <span className="font-medium">
-                                ${record.amount.toLocaleString()}
-                              </span>
-                              <button
-                                onClick={() => handleRemoveRecord(company, index)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <MinusCircle className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ))}
+                        {salesRecords[company]?.map((record) => (
+  <div key={record._id} className="flex justify-between items-center px-4 py-2">
+    <span className="text-sm text-gray-600">
+      {new Date(record.timestamp).toLocaleString()}
+    </span>
+    <span className="font-medium">
+      ${record.amount.toLocaleString()}
+    </span>
+    <button
+      onClick={() => handleRemoveRecord(company, record)}
+      className="text-red-500 hover:text-red-700"
+    >
+      <MinusCircle className="w-5 h-5" />
+    </button>
+  </div>
+))}
                           {(!salesRecords[company] || salesRecords[company].length === 0) && (
                             <div className="px-4 py-3 text-center text-gray-500">
                               No hay ventas registradas
@@ -458,14 +444,14 @@ const SalesTracker = () => {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleSale(data.products[0].sku, -1)}
+                              onClick={() => handleSale(company, product.sku, -1)}
                               disabled={!sales[data.products[0].sku]}
                               className="p-1 rounded-full hover:bg-red-100 disabled:opacity-50"
                             >
                               <MinusCircle className="w-8 h-8 text-red-500" />
                             </button>
                             <button
-                              onClick={() => handleSale(data.products[0].sku, 1)}
+                              onClick={() => handleSale(company, product.sku, 1)}
                               className="p-1 rounded-full hover:bg-green-100"
                             >
                               <PlusCircle className="w-8 h-8 text-green-500" />
