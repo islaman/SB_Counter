@@ -150,6 +150,16 @@ const SalesTracker = () => {
   // Llama a esta función dentro de un useEffect para ejecutarla al cargar el componente
   React.useEffect(() => {
     fetchSales();
+    fetch('https://sb-counter-backend.onrender.com/api/sales')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => console.log('Datos recibidos:', data))
+  .catch(error => console.error('Error al conectar con el backend:', error));
+
   }, []);
   
   const calculateCompanyProgress = (company, data) => {
