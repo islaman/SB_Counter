@@ -151,71 +151,19 @@ const SalesTracker = () => {
   };
 
 
-  const checkServerConnection = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/health`);
-      return response.ok;
-    } catch (error) {
-      console.error('Connection check failed:', error);
-      return false;
-    }
-  };
 
+// Modificar la función de verificación de conexión
+const checkServerConnection = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/sales`);
+    return response.ok;
+  } catch (error) {
+    console.error('Error de conexión:', error);
+    return false;
+  }
+};
 
-
-  const fetchWithRetry = async (url, options, maxRetries = 3) => {
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response;
-      } catch (error) {
-        if (i === maxRetries - 1) throw error;
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
-      }
-    }
-  };
-  
-  const fetchSales = async () => {
-    try {
-      setLoading(true);
-      const response = await fetchWithRetry(`${API_BASE_URL}/api/sales`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      const data = await response.json();
-      
-      // Process the sales data
-      const processedSales = {};
-      const processedAmounts = {};
-      
-      // Group sales by company and calculate totals
-      data.forEach(sale => {
-        if (!processedSales[sale.company]) {
-          processedSales[sale.company] = [];
-        }
-        processedSales[sale.company].push(sale);
-        
-        if (companies[sale.company]?.type === 'amount') {
-          processedAmounts[sale.company] = (processedAmounts[sale.company] || 0) + sale.amount;
-        }
-      });
-  
-      setSalesRecords(processedSales);
-      setSalesAmount(processedAmounts);
-      setError(null);
-    } catch (err) {
-      setError('Error al cargar datos: ' + err.message);
-      console.error('Error fetching sales:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  
+// Actualizar el useEffect
 React.useEffect(() => {
   const initializeApp = async () => {
     setLoading(true);
@@ -235,6 +183,62 @@ React.useEffect(() => {
 
   initializeApp();
 }, []);
+
+const fetchWithRetry = async (url, options, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData || `Error HTTP: ${response.status}`);
+      }
+      return response;
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      // Esperar antes de reintentar (1s, 2s, 3s)
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+};
+
+const fetchSales = async () => {
+  try {
+    setLoading(true);
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/sales`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await response.json();
+    
+    // Procesar los datos de ventas
+    const processedSales = {};
+    const processedAmounts = {};
+    
+    data.forEach(sale => {
+      if (!processedSales[sale.company]) {
+        processedSales[sale.company] = [];
+      }
+      processedSales[sale.company].push(sale);
+      
+      if (companies[sale.company]?.type === 'amount') {
+        processedAmounts[sale.company] = (processedAmounts[sale.company] || 0) + sale.amount;
+      }
+    });
+
+    setSalesRecords(processedSales);
+    setSalesAmount(processedAmounts);
+    setError(null);
+  } catch (err) {
+    setError('Error al cargar datos: ' + (err.message || 'Error de conexión'));
+    console.error('Error al obtener ventas:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+ 
+  
   
   const calculateCompanyProgress = (company, data) => {
     const total = data.products.reduce((acc, product) => {
