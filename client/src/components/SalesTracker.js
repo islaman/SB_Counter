@@ -244,17 +244,26 @@ const fetchSales = async () => {
 
  
   
+const calculateCompanyProgress = (company, data) => {
+  const records = salesRecords[company] || [];
+  let total = 0;
   
-  const calculateCompanyProgress = (company, data) => {
-    const total = data.products.reduce((acc, product) => {
-      const productSales = sales[product.sku] || 0;
-      return acc + productSales;
+  if (data.type === 'amount') {
+    total = records.reduce((acc, record) => acc + record.amount, 0);
+  } else {
+    // Para ventas por unidades
+    total = records.reduce((acc, record) => {
+      // Solo suma si el tipo es 'units'
+      if (record.type === 'units') {
+        return acc + record.amount;
+      }
+      return acc;
     }, 0);
-  
-    const percentage = (total / data.meta) * 100;
-    return { total, percentage };
-  };
-  
+  }
+
+  const percentage = (total / data.meta) * 100;
+  return { total, percentage };
+};
   
   const handleAddAmount = async (company, sku, amount) => {
     try {
@@ -348,9 +357,7 @@ const fetchSales = async () => {
         </div>
       )}
       
-      {loading ? (
-        <div className="text-center py-4">Loading sales data...</div>
-      ) : (
+  
     <div className="space-y-6 p-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Registro de Ventas en Tiempo Real - Metas SKU 182</h2>
@@ -523,14 +530,14 @@ const fetchSales = async () => {
                             </div>
                             <div className="flex gap-2">
                               <button
-                                onClick={() => handleSale(product.sku, -1)}
+                                onClick={() => handleSale(company, product.sku, -1)}
                                 disabled={!sales[product.sku]}
                                 className="p-1 rounded-full hover:bg-red-100 disabled:opacity-50"
                               >
                                 <MinusCircle className="w-8 h-8 text-red-500" />
                               </button>
                               <button
-                                onClick={() => handleSale(product.sku, 1)}
+                                onClick={() => handleSale(company, product.sku, 1)}
                                 className="p-1 rounded-full hover:bg-green-100"
                               >
                                 <PlusCircle className="w-8 h-8 text-green-500" />
@@ -548,7 +555,7 @@ const fetchSales = async () => {
         })}
       </div>
     </div>
-    )}
+  
     </div>
   );
   {error && (
