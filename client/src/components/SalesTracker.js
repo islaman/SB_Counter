@@ -253,32 +253,38 @@ const fetchSales = async () => {
   
   const handleAddAmount = async (company, sku, amount) => {
     try {
-      if (!amount || amount <= 0) return;
-
+      if (!company || !sku || !amount) {
+        throw new Error('Faltan campos obligatorios');
+      }
+  
       const sale = {
         company,
         sku,
-        amount: Number(amount),
-        type: 'amount',
-        timestamp: new Date().toISOString()
+        amount: Number(amount)
       };
-
+  
+      // Agrega campos opcionales solo si son necesarios
+      if (amount > 100) sale.type = 'amount';
+      sale.timestamp = new Date().toISOString();
+  
+      // Aquí colocamos el console.log
+      console.log('Datos enviados al backend:', sale);
+  
       const response = await fetch(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sale)
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to save amount');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al guardar la venta');
       }
-
-      // Clear input and refresh data
-      setNewAmount('');
+  
       await fetchSales();
     } catch (err) {
-      setError('Error saving amount: ' + err.message);
-      console.error('Error saving amount:', err);
+      setError(err.message);
+      console.error('Error saving sale:', err);
     }
   };
   

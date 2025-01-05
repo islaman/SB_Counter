@@ -13,21 +13,30 @@ router.get('/api/sales', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener las ventas' });
   }
 });
-
-// Agregar una nueva venta
 router.post('/api/sales', async (req, res) => {
-  try {
-    const { company, sku, amount, type } = req.body;
-    if (!company || !sku || !amount || !type) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-    }
+  const { company, sku, amount } = req.body;
 
-    const sale = new Sale({ company, sku, amount, type });
+  // Verifica solo los campos esenciales
+  if (!company || !sku || !amount) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios: company, sku, amount' });
+  }
+
+  try {
+    // Lógica para guardar la venta
+    const sale = new Sale({
+      company,
+      sku,
+      amount,
+      type: req.body.type || 'units', // Valor por defecto para type
+      timestamp: req.body.timestamp || new Date().toISOString() // Valor por defecto para timestamp
+    });
+
     const savedSale = await sale.save();
     res.status(201).json(savedSale);
   } catch (error) {
     res.status(500).json({ error: 'Error al guardar la venta' });
   }
 });
+
 
 module.exports = router;
