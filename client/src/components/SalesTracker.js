@@ -130,7 +130,10 @@ const SalesTracker = () => {
 
   const fetchSales = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sales`);
+      const response = await fetch(`${API_BASE_URL}/api/sales`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
       if (!response.ok) {
         throw new Error('Error al obtener las ventas');
       }
@@ -140,6 +143,7 @@ const SalesTracker = () => {
       console.error('Error al obtener las ventas:', error);
     }
   };
+  
   
   
 
