@@ -12,6 +12,7 @@ const SalesTracker = () => {
   const [newAmount, setNewAmount] = useState('');
   const [salesRecords, setSalesRecords] = useState({});
 
+  
   const companies = {
     'ALPES MASIVO': {
       products: [{ sku: '182-AM', name: 'Productos Alpes Masivo' }],
@@ -160,7 +161,8 @@ const SalesTracker = () => {
       if (!response.ok) {
         throw new Error('Error al guardar la venta');
       }
-  
+      const data = companies[company]; // Ejemplo para obtener datos de 'companies'
+      const progress = calculateCompanyProgress(company, data);
       const data = await response.json();
       console.log('Venta guardada:', data);
     } catch (error) {
