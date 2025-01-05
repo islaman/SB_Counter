@@ -131,39 +131,61 @@ const SalesTracker = () => {
         type: 'units',
         timestamp: new Date().toISOString()
       };
-
-      const response = await fetch(`${API_BASE_URL}/api/sales`, {
+  
+      await fetchWithRetry(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sale)
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to save sale');
-      }
-
-      // Update local state
+  
       setSales(prev => ({
         ...prev,
         [sku]: Math.max(0, (prev[sku] || 0) + increment)
       }));
-
-      // Refresh sales data
+  
       await fetchSales();
     } catch (err) {
-      setError('Error saving sale: ' + err.message);
+      setError('Error al guardar venta: ' + err.message);
       console.error('Error saving sale:', err);
     }
   };
 
 
+  const checkServerConnection = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`);
+      return response.ok;
+    } catch (error) {
+      console.error('Connection check failed:', error);
+      return false;
+    }
+  };
+
+
+
+  const fetchWithRetry = async (url, options, maxRetries = 3) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response;
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+      }
+    }
+  };
+  
   const fetchSales = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/sales`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch sales data');
-      }
+      const response = await fetchWithRetry(`${API_BASE_URL}/api/sales`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
       const data = await response.json();
       
       // Process the sales data
@@ -177,17 +199,16 @@ const SalesTracker = () => {
         }
         processedSales[sale.company].push(sale);
         
-        // Update amounts for amount-based companies
         if (companies[sale.company]?.type === 'amount') {
           processedAmounts[sale.company] = (processedAmounts[sale.company] || 0) + sale.amount;
         }
       });
-
+  
       setSalesRecords(processedSales);
       setSalesAmount(processedAmounts);
       setError(null);
     } catch (err) {
-      setError('Error loading sales data: ' + err.message);
+      setError('Error al cargar datos: ' + err.message);
       console.error('Error fetching sales:', err);
     } finally {
       setLoading(false);
@@ -195,9 +216,25 @@ const SalesTracker = () => {
   };
   
   
-  React.useEffect(() => {
-    fetchSales();
-  }, []);
+React.useEffect(() => {
+  const initializeApp = async () => {
+    setLoading(true);
+    try {
+      const isConnected = await checkServerConnection();
+      if (!isConnected) {
+        setError('No se pudo establecer conexión con el servidor. Por favor, intente más tarde.');
+        return;
+      }
+      await fetchSales();
+    } catch (err) {
+      setError('Error al inicializar la aplicación: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  initializeApp();
+}, []);
   
   const calculateCompanyProgress = (company, data) => {
     const total = data.products.reduce((acc, product) => {
@@ -502,6 +539,17 @@ const SalesTracker = () => {
     )}
     </div>
   );
+  {error && (
+    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative flex justify-between items-center">
+      <span>{error}</span>
+      <button 
+        onClick={() => fetchSales()} 
+        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+      >
+        Reintentar Conexión
+      </button>
+    </div>
+  )}
 };
 
 export default SalesTracker;
