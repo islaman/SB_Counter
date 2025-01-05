@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { PlusCircle, MinusCircle, Trophy } from 'lucide-react';
 
+const API_BASE_URL = 'https://sb-counter-backend.onrender.com'
+
+
 const SalesTracker = () => {
   const [sales, setSales] = useState({});
   const [salesAmount, setSalesAmount] = useState({});
@@ -123,14 +126,41 @@ const SalesTracker = () => {
     }));
   };
 
+
+  const fetchSales = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sales`);
+      if (!response.ok) {
+        throw new Error('Error al obtener las ventas');
+      }
+  
+      const data = await response.json();
+      console.log('Ventas obtenidas:', data);
+      // Aquí puedes actualizar el estado de `salesRecords` con los datos obtenidos
+    } catch (error) {
+      console.error('Error al obtener las ventas:', error);
+    }
+  };
+  
+  // Llama a esta función dentro de un useEffect para ejecutarla al cargar el componente
+  React.useEffect(() => {
+    fetchSales();
+  }, []);
+  
+
   const handleAddAmount = async (company, sku, amount, type) => {
     try {
-      const sale = { company, sku, amount, type }; // Agregar tipo: 'units' o 'amount'
+      const sale = { company, sku, amount, type }; // Datos a enviar al backend
       const response = await fetch(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sale),
       });
+  
+      if (!response.ok) {
+        throw new Error('Error al guardar la venta');
+      }
+  
       const data = await response.json();
       console.log('Venta guardada:', data);
     } catch (error) {
