@@ -148,7 +148,18 @@ const SalesTracker = () => {
     fetchSales();
   }, []);
   
+  const calculateCompanyProgress = (company, data) => {
+    const total = data.products.reduce((acc, product) => {
+      const productSales = sales[product.sku] || 0;
+      return acc + productSales;
+    }, 0);
+  
+    const percentage = (total / data.meta) * 100;
+  
+    return { total, percentage };
+  };
 
+  
   const handleAddAmount = async (company, sku, amount, type) => {
     try {
       const sale = { company, sku, amount, type }; // Datos a enviar al backend
@@ -161,14 +172,19 @@ const SalesTracker = () => {
       if (!response.ok) {
         throw new Error('Error al guardar la venta');
       }
-      
-      const progress = calculateCompanyProgress(company, data);
       const data = await response.json();
       console.log('Venta guardada:', data);
+  
+      // Actualiza los registros de ventas después de guardar
+      setSalesRecords((prev) => ({
+        ...prev,
+        [company]: [...(prev[company] || []), sale],
+      }));
     } catch (error) {
       console.error('Error al guardar la venta:', error);
     }
   };
+  
   
 
   const handleRemoveRecord = (company, index) => {
@@ -194,24 +210,12 @@ const SalesTracker = () => {
     setShowResetConfirm(false);
   };
 
-  const calculateCompanyProgress = (company, data) => {
-    const total = data.products.reduce((acc, product) => {
-      const productSales = sales[product.sku] || 0;
-      return acc + productSales;
-    }, 0);
-  
-    const percentage = (total / data.meta) * 100;
-  
-    return { total, percentage };
-  };
-  
-  // Mostrar correctamente unidades o montos
-  <div>
-    Total: {data.type === 'amount' ? 
-      `$${progress.total.toLocaleString()}` : 
-      `${progress.total} unidades`}
-  </div>
-  
+<div>
+  Total: {data.type === 'amount' ? 
+    `$${progress.total.toLocaleString()}` : 
+    `${progress.total} unidades`}
+</div>
+
 
 
   const getProgressColor = (percentage) => {
@@ -256,10 +260,10 @@ const SalesTracker = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.entries(companies).map(([company, data]) => {
-          const progress = calculateCompanyProgress(company, data);
-          const progressClass = getProgressColor(progress.percentage);
-          
+      {Object.entries(companies).map(([company, data]) => {
+  const progress = calculateCompanyProgress(company, data); // Calcula progress aquí
+  const progressClass = getProgressColor(progress.percentage); // Calcula la clase de progreso
+
           return (
             <Card key={company} className={`border-2 ${progressClass}`}>
               <CardHeader className="border-b bg-gray-50">
