@@ -128,7 +128,6 @@ const SalesTracker = () => {
   };
 
 
-  
   const fetchSales = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/sales`);
@@ -141,6 +140,7 @@ const SalesTracker = () => {
       console.error('Error al obtener las ventas:', error);
     }
   };
+  
   
 
   // Llama a esta función dentro de un useEffect para ejecutarla al cargar el componente
