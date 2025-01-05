@@ -219,6 +219,7 @@ const fetchSales = async () => {
 
     const processedSales = {};
     const processedAmounts = {};
+    const individualSales = {}; // Para mantener el conteo individual por SKU
 
     data.forEach(sale => {
       if (!processedSales[sale.company]) {
@@ -226,11 +227,17 @@ const fetchSales = async () => {
       }
       processedSales[sale.company].push(sale);
 
+      // Actualizar conteos individuales
+      if (sale.type === 'units') {
+        individualSales[sale.sku] = (individualSales[sale.sku] || 0) + sale.amount;
+      }
+
       if (companies[sale.company]?.type === 'amount') {
         processedAmounts[sale.company] = (processedAmounts[sale.company] || 0) + sale.amount;
       }
     });
 
+    setSales(individualSales); // Actualiza el estado de conteos individuales
     setSalesRecords(processedSales);
     setSalesAmount(processedAmounts);
   } catch (err) {
@@ -299,17 +306,18 @@ const calculateCompanyProgress = (company, data) => {
   };
   
   
-  
   const handleRemoveRecord = async (company, record) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/sales/${record._id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
       });
   
       if (!response.ok) {
         throw new Error('Failed to delete sale record');
       }
   
+      // Actualizar la vista
       await fetchSales();
     } catch (err) {
       setError('Error deleting record: ' + err.message);
@@ -320,20 +328,21 @@ const calculateCompanyProgress = (company, data) => {
   const resetSales = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/sales/reset`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to reset sales');
       }
-
-      // Reset local state
+  
+      // Reset all states
       setSales({});
       setSalesAmount({});
       setSalesRecords({});
       setShowResetConfirm(false);
       
-      // Refresh data
+      // Actualiza la vista
       await fetchSales();
     } catch (err) {
       setError('Error resetting sales: ' + err.message);
