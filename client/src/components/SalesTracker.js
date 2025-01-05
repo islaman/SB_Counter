@@ -356,27 +356,27 @@ const handleResetCompany = async (company) => {
   const resetSales = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/sales/reset`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
       });
   
       if (!response.ok) {
-        throw new Error('Error al vaciar la base de datos');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al resetear la base de datos');
       }
   
-      // Limpiar estados locales
       setSales({});
       setSalesAmount({});
       setSalesRecords({});
-      setNewAmount('');
       setShowResetConfirm(false);
-  
-      // Recargar los datos
-      await fetchSales();
+      setError(null);
+      console.log('Base de datos reseteada exitosamente');
     } catch (err) {
-      setError('Error al resetear: ' + err.message);
-      console.error('Error resetting:', err);
+      setError('Error al resetear ventas: ' + err.message);
+      console.error('Error resetting sales:', err);
     }
   };
+  
 
 
   const getProgressColor = (percentage) => {

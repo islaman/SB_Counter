@@ -43,14 +43,14 @@ router.delete('/api/sales/:id', async (req, res) => {  // Añadido /api/ al inic
   }
 });
 
-router.delete('/api/sales', async (req, res) => {
+// Endpoint para resetear la base de datos
+router.delete('/api/sales/reset', async (req, res) => {
   try {
-    const result = await Sale.deleteMany(); // Vacía la colección
-    console.log('Registros eliminados:', result);
-    res.status(200).json({ message: 'Todas las ventas han sido eliminadas' });
+    await mongoose.connection.db.dropDatabase(); // Vacía toda la base de datos
+    res.status(200).json({ message: 'Base de datos reseteada exitosamente' });
   } catch (error) {
-    console.error('Error al resetear las ventas:', error);
-    res.status(500).json({ error: 'Error al resetear las ventas' });
+    console.error('Error al resetear la base de datos:', error);
+    res.status(500).json({ error: 'Error al resetear la base de datos' });
   }
 });
 
