@@ -1,0 +1,25 @@
+{
+    "name": "sb-counter-backend",
+    "version": "1.0.0",
+    "description": "Backend para SB Counter",
+    "main": "server/server.js",
+    "scripts": {
+      "start": "node server/server.js",
+      "dev": "nodemon server/server.js"
+    },
+    "keywords": [],
+    "author": "Francis Serrano",
+    "license": "MIT",
+    "dependencies": {
+      "express": "^4.18.2",
+      "mongoose": "^7.0.3",
+      "dotenv": "^16.0.3"
+    },
+    "devDependencies": {
+      "nodemon": "^2.0.20"
+    },
+    "engines": {
+      "node": ">=16.x"
+    }
+  }
+  
