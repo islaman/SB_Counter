@@ -11,6 +11,8 @@ const SalesTracker = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [newAmount, setNewAmount] = useState('');
   const [salesRecords, setSalesRecords] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   
   const companies = {
