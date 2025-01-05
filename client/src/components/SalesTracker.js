@@ -434,32 +434,32 @@ const SalesTracker = () => {
                         </ul>
                       </div>
                     </div>
-                  ) : data.products.length === 1 ? (
-                    <div className="w-full">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium">{data.products[0].name}</div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-xl font-bold w-12 text-center">
-                            {sales[data.products[0].sku] || 0}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleSale(company, product.sku, -1)}
-                              disabled={!sales[data.products[0].sku]}
-                              className="p-1 rounded-full hover:bg-red-100 disabled:opacity-50"
-                            >
-                              <MinusCircle className="w-8 h-8 text-red-500" />
-                            </button>
-                            <button
-                              onClick={() => handleSale(company, product.sku, 1)}
-                              className="p-1 rounded-full hover:bg-green-100"
-                            >
-                              <PlusCircle className="w-8 h-8 text-green-500" />
-                            </button>
-                          </div>
-                        </div>
+               ) : data.products.length === 1 ? (
+                <div className="w-full">
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium">{data.products[0].name}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-xl font-bold w-12 text-center">
+                        {sales[data.products[0].sku] || 0}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSale(company, data.products[0].sku, -1)}  // Fixed line
+                          disabled={!sales[data.products[0].sku]}
+                          className="p-1 rounded-full hover:bg-red-100 disabled:opacity-50"
+                        >
+                          <MinusCircle className="w-8 h-8 text-red-500" />
+                        </button>
+                        <button
+                          onClick={() => handleSale(company, data.products[0].sku, 1)}  // Fixed line
+                          className="p-1 rounded-full hover:bg-green-100"
+                        >
+                          <PlusCircle className="w-8 h-8 text-green-500" />
+                        </button>
                       </div>
                     </div>
+                  </div>
+                </div>
                   ) : (
                     <div className="space-y-4">
                       {data.products.map((product) => (
