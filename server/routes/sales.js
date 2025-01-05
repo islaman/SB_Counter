@@ -43,14 +43,31 @@ router.delete('/api/sales/:id', async (req, res) => {  // Añadido /api/ al inic
   }
 });
 
-// Endpoint para resetear la base de datos
+
+// Modifica la ruta de reset
 router.delete('/api/sales/reset', async (req, res) => {
   try {
-    await Sale.deleteMany({}); // En lugar de dropDatabase, solo elimina los documentos de la colección
-    res.status(200).json({ message: 'Ventas reseteadas exitosamente' });
+    // Usar deleteMany con un try/catch específico
+    try {
+      const result = await Sale.deleteMany({});
+      console.log('Reset result:', result); // Para debugging
+      res.status(200).json({ 
+        message: 'Ventas reseteadas exitosamente',
+        deletedCount: result.deletedCount 
+      });
+    } catch (dbError) {
+      console.error('Error en deleteMany:', dbError);
+      res.status(500).json({ 
+        error: 'Error al eliminar los registros',
+        details: dbError.message 
+      });
+    }
   } catch (error) {
-    console.error('Error al resetear las ventas:', error);
-    res.status(500).json({ error: 'Error al resetear las ventas' });
+    console.error('Error general en reset:', error);
+    res.status(500).json({ 
+      error: 'Error al resetear las ventas',
+      details: error.message 
+    });
   }
 });
 

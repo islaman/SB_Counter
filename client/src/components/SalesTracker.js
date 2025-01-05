@@ -355,18 +355,25 @@ const handleResetCompany = async (company) => {
 
   const resetSales = async () => {
     try {
-      console.log('Iniciando reset de ventas...'); // Debug
-  
+      console.log('Iniciando reset de ventas...');
+      
       const response = await fetch(`${API_BASE_URL}/api/sales/reset`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
   
-      console.log('Respuesta del servidor:', response.status); // Debug
+      console.log('Status de la respuesta:', response.status);
+      
+      // Intentar obtener el cuerpo de la respuesta
+      const responseData = await response.json().catch(() => null);
+      console.log('Respuesta del servidor:', responseData);
   
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al resetear las ventas');
+        throw new Error(
+          responseData?.error || 
+          responseData?.details || 
+          'Error al resetear las ventas'
+        );
       }
   
       // Limpiar estados locales
@@ -379,9 +386,10 @@ const handleResetCompany = async (company) => {
       // Recargar datos
       await fetchSales();
       
-      console.log('Reset completado exitosamente'); // Debug
+      // Mostrar mensaje de éxito
+      console.log('Reset completado:', responseData?.message);
     } catch (err) {
-      console.error('Error completo:', err); // Debug
+      console.error('Error completo:', err);
       setError('Error al resetear ventas: ' + err.message);
     }
   };
