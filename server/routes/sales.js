@@ -53,4 +53,15 @@ router.post('/api/sales/reset', async (req, res) => {  // Añadido /api/ al inic
   }
 });
 
+// En tu backend, añade esta nueva ruta
+router.delete('/api/sales/company/:company', async (req, res) => {
+  try {
+    const { company } = req.params;
+    await Sale.deleteMany({ company });
+    res.status(200).json({ message: `Todas las ventas de ${company} han sido eliminadas` });
+  } catch (error) {
+    res.status(500).json({ error: `Error al resetear las ventas de ${company}` });
+  }
+});
+
 module.exports = router;

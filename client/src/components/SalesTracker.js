@@ -310,6 +310,25 @@ const handleAddAmount = async (company, sku, amount) => {
   }
 };
   
+
+const handleResetCompany = async (company) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/sales/company/${company}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al resetear ventas de ${company}`);
+    }
+
+    // Actualizar datos
+    await fetchSales();
+    setError(null);
+  } catch (err) {
+    setError(`Error al resetear ventas de ${company}: ${err.message}`);
+  }
+};
   
   const handleRemoveRecord = async (company, record) => {
     try {
@@ -387,28 +406,30 @@ const handleAddAmount = async (company, sku, amount) => {
         </button>
       </div>
 
-      {showResetConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full m-4">
-            <h3 className="text-lg font-bold mb-4">¿Confirmar reinicio?</h3>
-            <p className="mb-4">Esta acción eliminará todos los registros de ventas.</p>
-            <div className="flex justify-end gap-4">
-              <button 
-                onClick={() => setShowResetConfirm(false)}
-                className="px-4 py-2 bg-gray-100 rounded-lg"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={resetSales}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg"
-              >
-                Confirmar Reinicio
-              </button>
+    
+        {/* Modal de confirmación general */}
+        {showResetConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-sm w-full m-4">
+              <h3 className="text-lg font-bold mb-4">¿Confirmar reinicio total?</h3>
+              <p className="mb-4">Esta acción eliminará todos los registros de ventas.</p>
+              <div className="flex justify-end gap-4">
+                <button 
+                  onClick={() => setShowResetConfirm(false)}
+                  className="px-4 py-2 bg-gray-100 rounded-lg"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={resetSales}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg"
+                >
+                  Confirmar Reinicio
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {Object.entries(companies).map(([company, data]) => {
@@ -420,6 +441,12 @@ const handleAddAmount = async (company, sku, amount) => {
             <CardHeader className="border-b bg-gray-50">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-xl font-bold">{company}</CardTitle>
+                <button
+                      onClick={() => handleResetCompany(company)}
+                      className="px-3 py-1 bg-red-50 text-red-500 text-sm rounded hover:bg-red-100 transition-colors"
+                    >
+                      Resetear
+                    </button>
                 <div className="text-right">
                   <div className="text-sm font-medium">
                     Meta SKU 182: {data.type === 'amount' ? 
