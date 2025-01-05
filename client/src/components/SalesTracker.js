@@ -120,30 +120,77 @@ const SalesTracker = () => {
     }
   };
 
-  const handleSale = (sku, increment) => {
-    setSales(prev => ({
-      ...prev,
-      [sku]: Math.max(0, (prev[sku] || 0) + increment)
-    }));
+  const handleSale = async (company, sku, increment) => {
+    try {
+      const sale = {
+        company,
+        sku,
+        amount: increment,
+        type: 'units',
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/sales`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sale)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save sale');
+      }
+
+      // Update local state
+      setSales(prev => ({
+        ...prev,
+        [sku]: Math.max(0, (prev[sku] || 0) + increment)
+      }));
+
+      // Refresh sales data
+      await fetchSales();
+    } catch (err) {
+      setError('Error saving sale: ' + err.message);
+      console.error('Error saving sale:', err);
+    }
   };
 
 
   const fetchSales = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sales`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/sales`);
       if (!response.ok) {
-        throw new Error('Error al obtener las ventas');
+        throw new Error('Failed to fetch sales data');
       }
       const data = await response.json();
-      setSalesRecords(data);
-    } catch (error) {
-      console.error('Error al obtener las ventas:', error);
+      
+      // Process the sales data
+      const processedSales = {};
+      const processedAmounts = {};
+      
+      // Group sales by company and calculate totals
+      data.forEach(sale => {
+        if (!processedSales[sale.company]) {
+          processedSales[sale.company] = [];
+        }
+        processedSales[sale.company].push(sale);
+        
+        // Update amounts for amount-based companies
+        if (companies[sale.company]?.type === 'amount') {
+          processedAmounts[sale.company] = (processedAmounts[sale.company] || 0) + sale.amount;
+        }
+      });
+
+      setSalesRecords(processedSales);
+      setSalesAmount(processedAmounts);
+      setError(null);
+    } catch (err) {
+      setError('Error loading sales data: ' + err.message);
+      console.error('Error fetching sales:', err);
+    } finally {
+      setLoading(false);
     }
   };
-  
   
   
 
@@ -173,56 +220,80 @@ const SalesTracker = () => {
   };
   
   
-  const handleAddAmount = async (company, sku, amount, type) => {
+  const handleAddAmount = async (company, sku, amount) => {
     try {
-      const sale = { company, sku, amount, type }; // Datos a enviar al backend
+      if (!amount || amount <= 0) return;
+
+      const sale = {
+        company,
+        sku,
+        amount: Number(amount),
+        type: 'amount',
+        timestamp: new Date().toISOString()
+      };
+
       const response = await fetch(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sale),
+        body: JSON.stringify(sale)
       });
-  
+
       if (!response.ok) {
-        throw new Error('Error al guardar la venta');
+        throw new Error('Failed to save amount');
       }
-      const data = await response.json();
-      console.log('Venta guardada:', data);
-  
-      // Actualiza los registros de ventas después de guardar
-      setSalesRecords((prev) => ({
-        ...prev,
-        [company]: [...(prev[company] || []), sale],
-      }));
-    } catch (error) {
-      console.error('Error al guardar la venta:', error);
+
+      // Clear input and refresh data
+      setNewAmount('');
+      await fetchSales();
+    } catch (err) {
+      setError('Error saving amount: ' + err.message);
+      console.error('Error saving amount:', err);
     }
   };
   
   
 
-  const handleRemoveRecord = (company, index) => {
-    setSalesRecords(prev => {
-      const newRecords = { ...prev };
-      const amount = newRecords[company][index].amount;
-      newRecords[company] = newRecords[company].filter((_, i) => i !== index);
-      
-      // Actualizar el monto total
-      setSalesAmount(prev => ({
-        ...prev,
-        [company]: prev[company] - amount
-      }));
-      
-      return newRecords;
-    });
+  const handleRemoveRecord = async (company, saleId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sales/${saleId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete sale record');
+      }
+
+      // Refresh sales data
+      await fetchSales();
+    } catch (err) {
+      setError('Error deleting record: ' + err.message);
+      console.error('Error deleting record:', err);
+    }
   };
 
-  const resetSales = () => {
-    setSales({});
-    setSalesAmount({});
-    setSalesRecords({});
-    setShowResetConfirm(false);
-  };
+  const resetSales = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sales/reset`, {
+        method: 'POST'
+      });
 
+      if (!response.ok) {
+        throw new Error('Failed to reset sales');
+      }
+
+      // Reset local state
+      setSales({});
+      setSalesAmount({});
+      setSalesRecords({});
+      setShowResetConfirm(false);
+      
+      // Refresh data
+      await fetchSales();
+    } catch (err) {
+      setError('Error resetting sales: ' + err.message);
+      console.error('Error resetting sales:', err);
+    }
+  };
  
 
 
@@ -233,6 +304,16 @@ const SalesTracker = () => {
   };
 
   return (
+    <div className="space-y-6 p-4">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          {error}
+        </div>
+      )}
+      
+      {loading ? (
+        <div className="text-center py-4">Loading sales data...</div>
+      ) : (
     <div className="space-y-6 p-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Registro de Ventas en Tiempo Real - Metas SKU 182</h2>
@@ -429,6 +510,8 @@ const SalesTracker = () => {
           );
         })}
       </div>
+    </div>
+    )}
     </div>
   );
 };
