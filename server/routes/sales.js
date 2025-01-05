@@ -16,10 +16,7 @@ router.get('/api/sales', async (req, res) => {
 router.post('/api/sales', async (req, res) => {
   const { company, sku, amount } = req.body;
 
-  // Verifica solo los campos esenciales
-  if (!company || !sku || !amount) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios: company, sku, amount' });
-  }
+
 
   try {
     // Lógica para guardar la venta

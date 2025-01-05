@@ -128,27 +128,28 @@ const SalesTracker = () => {
         company,
         sku,
         amount: increment,
-        type: 'units',
-        timestamp: new Date().toISOString()
       };
   
-      await fetchWithRetry(`${API_BASE_URL}/api/sales`, {
+      console.log('Datos enviados al backend:', sale); // Para debugging
+  
+      const response = await fetch(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sale)
+        body: JSON.stringify(sale),
       });
   
-      setSales(prev => ({
-        ...prev,
-        [sku]: Math.max(0, (prev[sku] || 0) + increment)
-      }));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al guardar la venta');
+      }
   
       await fetchSales();
     } catch (err) {
-      setError('Error al guardar venta: ' + err.message);
+      setError(err.message);
       console.error('Error saving sale:', err);
     }
   };
+  
 
 
 
@@ -260,20 +261,16 @@ const fetchSales = async () => {
       const sale = {
         company,
         sku,
-        amount: Number(amount)
+        amount: Number(amount) || 0, // Valor por defecto si falta amount
+        type: 'amount', // Valor opcional
       };
   
-      // Agrega campos opcionales solo si son necesarios
-      if (amount > 100) sale.type = 'amount';
-      sale.timestamp = new Date().toISOString();
-  
-      // Aquí colocamos el console.log
       console.log('Datos enviados al backend:', sale);
   
       const response = await fetch(`${API_BASE_URL}/api/sales`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sale)
+        body: JSON.stringify(sale),
       });
   
       if (!response.ok) {
@@ -287,6 +284,7 @@ const fetchSales = async () => {
       console.error('Error saving sale:', err);
     }
   };
+  
   
   
   const handleRemoveRecord = async (company, record) => {
