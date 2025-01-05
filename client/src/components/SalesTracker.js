@@ -404,11 +404,18 @@ const handleResetCompany = async (company) => {
 
   return (
     <div className="space-y-6 p-4">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          {error}
+       {loading ? (
+      <div className="fixed inset-0 bg-white bg-opacity-80 z-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <div className="mt-4 text-lg text-gray-700 font-medium">Cargando datos...</div>
         </div>
-      )}
+      </div>
+    ) : error ? (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+        {error}
+      </div>
+    ) : null}
       
   
     <div className="space-y-6 p-4">
