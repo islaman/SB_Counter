@@ -272,63 +272,71 @@ const calculateCompanyProgress = (company, data) => {
   return { total, percentage };
 };
   
-  const handleAddAmount = async (company, sku, amount) => {
-    try {
-      if (!company || !sku || !amount) {
-        throw new Error('Faltan campos obligatorios');
-      }
-  
-      const sale = {
-        company,
-        sku,
-        amount: Number(amount) || 0, // Valor por defecto si falta amount
-        type: 'amount', // Valor opcional
-      };
-  
-      console.log('Datos enviados al backend:', sale);
-  
-      const response = await fetch(`${API_BASE_URL}/api/sales`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sale),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al guardar la venta');
-      }
-  
-      await fetchSales();
-    } catch (err) {
-      setError(err.message);
-      console.error('Error saving sale:', err);
+const handleAddAmount = async (company, sku, amount) => {
+  try {
+    if (!company || !sku || !amount) {
+      throw new Error('Faltan campos obligatorios');
     }
-  };
+
+    const sale = {
+      company,
+      sku,
+      amount: Number(amount),
+      type: 'amount',
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('Datos enviados al backend:', sale);
+
+    const response = await fetch(`${API_BASE_URL}/api/sales`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sale),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al guardar la venta');
+    }
+
+    // Limpiar el campo después de una venta exitosa
+    setNewAmount('');
+    
+    // Actualizar datos
+    await fetchSales();
+  } catch (err) {
+    setError(err.message);
+    console.error('Error saving sale:', err);
+  }
+};
   
   
   const handleRemoveRecord = async (company, record) => {
     try {
+      console.log('Deleting record:', record); // Para debug
+      
       const response = await fetch(`${API_BASE_URL}/api/sales/${record._id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
   
       if (!response.ok) {
-        throw new Error('Failed to delete sale record');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar la venta');
       }
   
-      // Actualizar la vista
+      // Actualizar la vista después de eliminar
       await fetchSales();
     } catch (err) {
-      setError('Error deleting record: ' + err.message);
+      setError('Error al eliminar registro: ' + err.message);
       console.error('Error deleting record:', err);
     }
   };
 
   const resetSales = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/sales/reset`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/api/sales`, {  // Cambiado de /reset a /sales
+        method: 'DELETE',  // Cambiado de POST a DELETE
         headers: { 'Content-Type': 'application/json' }
       });
   
@@ -341,6 +349,7 @@ const calculateCompanyProgress = (company, data) => {
       setSalesAmount({});
       setSalesRecords({});
       setShowResetConfirm(false);
+      setNewAmount(''); // Limpiar también el campo de monto
       
       // Actualiza la vista
       await fetchSales();

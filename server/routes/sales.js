@@ -31,18 +31,7 @@ router.post('/api/sales', async (req, res) => {
   }
 });
 
-// En tu backend (probablemente en routes/sales.js o similar)
-router.post('/sales/reset', async (req, res) => {
-  try {
-    await Sale.deleteMany({}); // Esto borrará todos los documentos en la colección
-    res.status(200).json({ message: 'All sales reset successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error resetting sales' });
-  }
-});
-
-// En tu backend
-router.delete('/sales/:id', async (req, res) => {
+router.delete('/api/sales/:id', async (req, res) => {  // Añadido /api/ al inicio
   try {
     const result = await Sale.findByIdAndDelete(req.params.id);
     if (!result) {
@@ -51,6 +40,16 @@ router.delete('/sales/:id', async (req, res) => {
     res.status(200).json({ message: 'Sale deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting sale' });
+  }
+});
+
+// Y la ruta de reset también necesita el prefijo /api/
+router.post('/api/sales/reset', async (req, res) => {  // Añadido /api/ al inicio
+  try {
+    await Sale.deleteMany({}); 
+    res.status(200).json({ message: 'All sales reset successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error resetting sales' });
   }
 });
 
